@@ -168,34 +168,76 @@ class Strategy:
 
     @classmethod
     def from_random(cls, tournament: Tournament):
-        return cls(
-            random.sample(tournament.teams, len(tournament.match_weeks)), tournament
+        # Process weeks with the fewest playing teams first (e.g. midweek
+        # rounds where the ELC sits out), so a scarce week doesn't get left
+        # with no valid team once the more flexible weeks have used them up.
+        dates_by_scarcity = sorted(
+            tournament.match_weeks,
+            key=lambda date: len(tournament.p_lose_mapping[date]),
         )
 
+        used_teams = set()
+        team_by_date = {}
+        for date in dates_by_scarcity:
+            available_teams = [
+                team
+                for team in tournament.p_lose_mapping[date]
+                if team not in used_teams
+            ]
+            if not available_teams:
+                raise ValueError(f"No team available to pick for week {date}")
+            team = random.choice(available_teams)
+            team_by_date[date] = team
+            used_teams.add(team)
+
+        strategy = [team_by_date[date] for date in tournament.match_weeks]
+        return cls(strategy, tournament)
+
     def make_swap(self, team_1, team_2):
-        team_1_date = None if team_1 in self.unused_teams else self.team_to_week[team_1]
-        team_2_date = None if team_2 in self.unused_teams else self.team_to_week[team_2]
+        # pop (not just read) each team's current date, so a team that ends
+        # up unused doesn't leave a stale team_to_week entry behind.
+        team_1_date = self.team_to_week.pop(team_1, None)
+        team_2_date = self.team_to_week.pop(team_2, None)
+        self.unused_teams.discard(team_1)
+        self.unused_teams.discard(team_2)
 
-        if team_1_date is None:
-            self.unused_teams.remove(team_1)
-            self.unused_teams.add(team_2)
-        else:
-            self.week_to_team[team_1_date] = team_2
-            self.team_to_week[team_2] = team_1_date
-
-        if team_2_date is None:
-            self.unused_teams.remove(team_2)
-            self.unused_teams.add(team_1)
-        else:
+        if team_2_date is not None:
             self.week_to_team[team_2_date] = team_1
             self.team_to_week[team_1] = team_2_date
+        else:
+            self.unused_teams.add(team_1)
+
+        if team_1_date is not None:
+            self.week_to_team[team_1_date] = team_2
+            self.team_to_week[team_2] = team_1_date
+        else:
+            self.unused_teams.add(team_2)
+
+    def _can_swap(self, team_1, team_2):
+        if team_1 == team_2:
+            return False
+
+        team_1_date = self.team_to_week.get(team_1)
+        team_2_date = self.team_to_week.get(team_2)
+
+        # A team moving into a date must actually play that week; a team
+        # becoming unused has no such constraint.
+        if team_2_date is not None and team_1 not in self.tournament.p_lose_mapping[team_2_date]:
+            return False
+        if team_1_date is not None and team_2 not in self.tournament.p_lose_mapping[team_1_date]:
+            return False
+        return team_1_date is not None or team_2_date is not None
 
     def change_to_random_neighbour(self):
         team_1 = random.choice(self.tournament.teams)
-        if team_1 in self.unused_teams:
-            team_2 = random.choice(list(self.team_to_week.keys()))
-        else:
-            team_2 = random.choice(self.tournament.teams)
+        candidates = [
+            team_2 for team_2 in self.tournament.teams if self._can_swap(team_1, team_2)
+        ]
+        if not candidates:
+            # No valid swap exists for this team this round; leave the
+            # strategy unchanged rather than producing an invalid one.
+            return
+        team_2 = random.choice(candidates)
         self.make_swap(team_1, team_2)
 
     def score(self):
