@@ -6,7 +6,7 @@ from typing import Callable
 import numpy as np
 import pandas as pd
 
-from data import get_matches, get_upcoming_match_odds, get_elos
+from data import get_matches, get_upcoming_match_odds, get_elos, int_to_date
 from model import elos_to_modelled_probabilities
 
 
@@ -263,6 +263,8 @@ class Strategy:
             rows.append(
                 {
                     "match_day": date,
+                    "date": int_to_date(match.date_id),
+                    "team": team,
                     "home_team": match.home_team,
                     "away_team": match.away_team,
                     "p_win": p_win,
