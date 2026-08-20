@@ -275,65 +275,6 @@ def get_elos():
     return {to_team(club): elo for club, elo in elos.items()}
 
 
-def get_elos_old():
-    """Original implementation, kept for reference: pulled ratings from the
-    api.clubelo.com CSV endpoint instead of scraping clubelo.com. Retired
-    because that API was unreliable.
-    """
-    response = None
-    for days_back in range(8):
-        date = pd.Timestamp.now() - pd.Timedelta(days=days_back)
-        url = f"http://api.clubelo.com/{date.strftime('%Y-%m-%d')}"
-
-        try:
-            response = get_url(url)
-            break
-        except requests.RequestException as e:
-            print(f"Failed to get Elo data for {date.strftime('%Y-%m-%d')}: {e}")
-            continue
-
-    if response is None:
-        raise Exception("Failed to retrieve Elo data for the last 7 days")
-
-    csv_io = StringIO(response.text)
-    elos = pd.read_csv(csv_io)
-
-    def to_team(team: str):
-        return {
-            "Birmingham": "Birmingham City",
-            "Blackburn": "Blackburn Rovers",
-            "Bolton": "Bolton Wanderers",
-            "Bournemouth": "AFC Bournemouth",
-            "Brighton": "Brighton & Hove Albion",
-            "Cardiff": "Cardiff City",
-            "Charlton": "Charlton Athletic",
-            "Coventry": "Coventry City",
-            "Derby": "Derby County",
-            "Forest": "Nottingham Forest",
-            "Hull": "Hull City AFC",
-            "Ipswich": "Ipswich Town",
-            "Leeds": "Leeds United",
-            "Man City": "Manchester City",
-            "Man United": "Manchester United",
-            "Newcastle": "Newcastle United",
-            "Norwich": "Norwich City",
-            "Preston": "Preston North End",
-            "QPR": "Queens Park Rangers",
-            "Stoke": "Stoke City",
-            "Sunderland": "Sunderland AFC",
-            "Swansea": "Swansea City AFC",
-            "Tottenham": "Tottenham Hotspur",
-            "West Brom": "West Bromwich Albion",
-            "West Ham": "West Ham United",
-            "Wolves": "Wolverhampton Wanderers",
-            "Wrexham": "Wrexham AFC",
-        }.get(team, team)
-
-    elos["Club"] = elos["Club"].apply(to_team)
-
-    return elos[elos["Country"] == "ENG"].set_index("Club")["Elo"].to_dict()
-
-
 def get_matches_for_league(league):
 
     season_start_date = 20260821  # Must be a Friday
