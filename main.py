@@ -264,6 +264,7 @@ class Strategy:
                 {
                     "match_day": date,
                     "date": int_to_date(match.date_id),
+                    "league": match.league,
                     "team": team,
                     "home_team": match.home_team,
                     "away_team": match.away_team,
