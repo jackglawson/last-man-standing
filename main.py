@@ -267,6 +267,8 @@ class Strategy:
                     "date": int_to_date(match.date_id),
                     "league": match.league,
                     "team": team,
+                    "opponent_team": match.away_team if team == match.home_team else match.home_team,
+                    "is_home": team == match.home_team,
                     "home_team": match.home_team,
                     "away_team": match.away_team,
                     "p_win": p_win,
@@ -276,7 +278,6 @@ class Strategy:
                 }
             )
         return pd.DataFrame(rows)
-
 
 
 class SimulatedAnnealing:

@@ -2,6 +2,16 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Instructions from user
+
+Do not edit .ipynb files unless I explicitly ask it
+
+## Git workflow
+- When working via agents, always work in a git worktree — don't edit the main checkout directly.
+- Do not merge into master automatically. Wait for explicit approval — I'll say "merge into master" or "merge this in" or just "merge"
+- You cannot merge from inside a worktree session (harness blocks writes to the main checkout). Tell me the worktree path is ready for review, and either exit so I can merge, or wait for a session started in the main checkout.
+- On approval: merge the worktree branch into master, then remove the worktree (`git worktree remove <path>`) and delete the branch (`git branch -d <branch>`).
+
 ## What this is
 
 A solver for a "Last Man Standing" football pick'em pool: each week you pick one team to win, each team can only be used once across the season, and you're eliminated if your pick loses. The code fetches Premier League + Championship (ELC) fixtures/odds/Elo ratings, models win/draw/loss probabilities for every remaining match, and uses simulated annealing to search for a season-long pick strategy that maximizes expected survival.
