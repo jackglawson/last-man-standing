@@ -7,6 +7,7 @@ from io import StringIO
 from pathlib import Path
 from xml.dom.domreg import well_known_implementations
 
+import numpy as np
 import requests
 import pandas as pd
 import datetime as dt
@@ -437,6 +438,28 @@ def get_matches():
     matches = add_is_valid_match(matches)
 
     return matches
+
+
+def get_teams_df(matches: list) -> pd.DataFrame:
+    team_to_league = {}
+    for match in matches:
+        team_to_league[match["home_team"]] = match["league"]
+        team_to_league[match["away_team"]] = match["league"]
+
+    elos = get_elos()
+
+    def get_elo_for_team(team: str):
+        if team in elos:
+            return elos[team]
+        print(f"WARNING: Could not find elo for {team}. Using average elo instead")
+        return np.mean(list(elos.values()))
+
+    return pd.DataFrame(
+        [
+            {"team": team, "league": league, "elo": get_elo_for_team(team)}
+            for team, league in team_to_league.items()
+        ]
+    )
 
 
 def add_inferred_match_day(matches: list):
