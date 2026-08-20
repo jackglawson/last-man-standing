@@ -5,6 +5,7 @@ from typing import Callable
 
 import numpy as np
 import pandas as pd
+from tqdm.auto import tqdm
 
 from data import get_matches, get_upcoming_match_odds, get_elos, int_to_date
 from model import elos_to_modelled_probabilities
@@ -298,7 +299,7 @@ class SimulatedAnnealing:
         epoch += 1
 
     def run(self, n_epochs: int, callback: Callable):
-        for epoch in range(n_epochs):
+        for epoch in tqdm(range(n_epochs)):
             self.iterate(epoch)
             callback(self, epoch)
 
