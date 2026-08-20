@@ -13,6 +13,8 @@ import pandas as pd
 import datetime as dt
 from bs4 import BeautifulSoup
 
+from settings import ELO_TEAM_MAPPING, SEASON_START_DATE, SEASON_YEAR
+
 CACHE_ROOT = Path(__file__).resolve().parent / ".cache"
 
 
@@ -242,49 +244,19 @@ def get_elos():
     elos = _parse_elo_html(response.text, "ENG")
 
     def to_team(team: str):
-        return {
-            "Birmingham": "Birmingham City",
-            "Blackburn": "Blackburn Rovers",
-            "Bolton": "Bolton Wanderers",
-            "Bournemouth": "AFC Bournemouth",
-            "Brighton": "Brighton & Hove Albion",
-            "Cardiff": "Cardiff City",
-            "Charlton": "Charlton Athletic",
-            "Coventry": "Coventry City",
-            "Derby": "Derby County",
-            "Forest": "Nottingham Forest",
-            "Hull": "Hull City AFC",
-            "Ipswich": "Ipswich Town",
-            "Leeds": "Leeds United",
-            "Man City": "Manchester City",
-            "Man United": "Manchester United",
-            "Newcastle": "Newcastle United",
-            "Norwich": "Norwich City",
-            "Preston": "Preston North End",
-            "QPR": "Queens Park Rangers",
-            "Stoke": "Stoke City",
-            "Sunderland": "Sunderland AFC",
-            "Swansea": "Swansea City AFC",
-            "Tottenham": "Tottenham Hotspur",
-            "West Brom": "West Bromwich Albion",
-            "West Ham": "West Ham United",
-            "Wolves": "Wolverhampton Wanderers",
-            "Wrexham": "Wrexham AFC",
-        }.get(team, team)
+        return ELO_TEAM_MAPPING.get(team, team)
 
     return {to_team(club): elo for club, elo in elos.items()}
 
 
 def get_matches_for_league(league):
 
-    season_start_date = 20260821  # Must be a Friday
-
     url = f"https://api.football-data.org/v4/competitions/{league}/matches"
 
     headers = {"X-Auth-Token": "9ef31fc38c374b5b9143fdcbf7ff01c3"}
 
     params = {
-        "season": "2026",
+        "season": SEASON_YEAR,
     }
 
     response = get_url(url, params, headers)
@@ -309,7 +281,7 @@ def get_matches_for_league(league):
         for match in data["matches"]
     ]
 
-    matches = [match for match in matches if match['date_id'] >= season_start_date]
+    matches = [match for match in matches if match['date_id'] >= SEASON_START_DATE]
 
     matches.sort(key=lambda x: x["date_id"])
 
@@ -321,7 +293,7 @@ def get_matches_for_league(league):
             format="%Y%m%d"
         ).day_name()
 
-        week_number = (match['date'] - int_to_date(season_start_date)).days // 7 + 1
+        week_number = (match['date'] - int_to_date(SEASON_START_DATE)).days // 7 + 1
 
         match['day_of_week'] = day_of_week
         match['week_number'] = week_number

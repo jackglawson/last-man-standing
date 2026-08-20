@@ -18,15 +18,17 @@ A solver for a "Last Man Standing" football pick'em pool: each week you pick one
 
 ## Running
 
-No build step, package manifest, test suite, or linter is configured — this is a small, ungrouped collection of scripts and Jupyter notebooks. Run scripts directly:
+No build step, package manifest, test suite, or linter is configured — this is a small, ungrouped collection of scripts and Jupyter notebooks. Dependencies (requests, pandas, bs4, numpy, tqdm, etc.) are installed in a project-local venv at `venv/`, not the system/conda Python — run scripts with that interpreter:
 
 ```
-python3 main.py
+venv/bin/python3 main.py
 ```
 
 Most exploratory/interactive work happens in the notebooks (`blackboard.ipynb`, `Evaluate elo model.ipynb`, `dates.ipynb`) rather than in `main.py`'s `__main__` block, which currently only holds toy example data.
 
 ## Architecture
+
+**`settings.py`** — config constants pulled out of `data.py`: `SEASON_YEAR`, `SEASON_START_DATE`, and `ELO_TEAM_MAPPING` (the clubelo → football-data team-name mapping used by `get_elos`). Update these here each season rather than editing `data.py`.
 
 **`data.py`** — all external I/O, three data sources:
 - `get_matches()` — fixtures/results from football-data.org (`get_matches_for_league`, called for `PL` and `ELC`), enriched with `week_number`, `day_of_week`, `is_midweek`, then run through `add_inferred_match_day` and `add_is_valid_match`.
