@@ -250,8 +250,28 @@ class Strategy:
             )
         return score
 
-    # def summarize_strategy(self):
-    #     for date in self.tournament.match_weeks:
+    def get_strategy_df(self):
+        rows = []
+        for date in self.tournament.match_weeks:
+            team = self.week_to_team[date]
+            match = next(
+                m
+                for m in self.tournament.matches[date]
+                if m.home_team == team or m.away_team == team
+            )
+            p_win = match.p_home if match.home_team == team else match.p_away
+            rows.append(
+                {
+                    "match_day": date,
+                    "home_team": match.home_team,
+                    "away_team": match.away_team,
+                    "p_win": p_win,
+                    "p_lose": self.tournament.p_lose_mapping[date][team],
+                    "p_draw": self.tournament.p_draw_mapping[date][team],
+                    "probability_source": match.probability_source,
+                }
+            )
+        return pd.DataFrame(rows)
 
 
 
