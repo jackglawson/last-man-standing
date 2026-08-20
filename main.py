@@ -142,7 +142,7 @@ class Tournament:
 
 
 class Strategy:
-    def __init__(self, strategy: list, tournament: Tournament):
+    def __init__(self, strategy: list, tournament: Tournament, locked_teams: set = None):
         self.tournament = tournament
         self.validate_input(strategy)
         self.week_to_team = {
@@ -154,6 +154,9 @@ class Strategy:
         self.unused_teams = set(
             [team for team in self.tournament.teams if team not in strategy]
         )
+        # Teams already used in past weeks; change_to_random_neighbour must
+        # never reassign these.
+        self.locked_teams = set(locked_teams or [])
 
     def validate_input(self, strategy):
         assert len(strategy) == len(
@@ -168,17 +171,27 @@ class Strategy:
             ), f"{team} does not play on {date}!"
 
     @classmethod
-    def from_random(cls, tournament: Tournament):
+    def from_random(cls, tournament: Tournament, locked_teams: list = None):
+        locked_teams = locked_teams or []
+        assert len(locked_teams) <= len(
+            tournament.match_weeks
+        ), "More locked teams than weeks in the tournament!"
+
+        # Already-picked teams line up chronologically with the earliest
+        # weeks (tournament.match_weeks is stored sorted ascending).
+        locked_dates = dict(zip(tournament.match_weeks, locked_teams))
+
         # Process weeks with the fewest playing teams first (e.g. midweek
         # rounds where the ELC sits out), so a scarce week doesn't get left
         # with no valid team once the more flexible weeks have used them up.
+        # Locked weeks are excluded: their team is already decided.
         dates_by_scarcity = sorted(
-            tournament.match_weeks,
+            (date for date in tournament.match_weeks if date not in locked_dates),
             key=lambda date: len(tournament.p_lose_mapping[date]),
         )
 
-        used_teams = set()
-        team_by_date = {}
+        used_teams = set(locked_teams)
+        team_by_date = dict(locked_dates)
         for date in dates_by_scarcity:
             available_teams = [
                 team
@@ -192,7 +205,7 @@ class Strategy:
             used_teams.add(team)
 
         strategy = [team_by_date[date] for date in tournament.match_weeks]
-        return cls(strategy, tournament)
+        return cls(strategy, tournament, locked_teams=set(locked_teams))
 
     def make_swap(self, team_1, team_2):
         # pop (not just read) each team's current date, so a team that ends
@@ -218,6 +231,11 @@ class Strategy:
         if team_1 == team_2:
             return False
 
+        # Locked teams (already picked in past weeks) must never move, and
+        # nothing may take over their week.
+        if team_1 in self.locked_teams or team_2 in self.locked_teams:
+            return False
+
         team_1_date = self.team_to_week.get(team_1)
         team_2_date = self.team_to_week.get(team_2)
 
@@ -230,7 +248,12 @@ class Strategy:
         return team_1_date is not None or team_2_date is not None
 
     def change_to_random_neighbour(self):
-        team_1 = random.choice(self.tournament.teams)
+        unlocked_teams = [
+            team for team in self.tournament.teams if team not in self.locked_teams
+        ]
+        if not unlocked_teams:
+            return
+        team_1 = random.choice(unlocked_teams)
         candidates = [
             team_2 for team_2 in self.tournament.teams if self._can_swap(team_1, team_2)
         ]
@@ -281,9 +304,9 @@ class Strategy:
 
 
 class SimulatedAnnealing:
-    def __init__(self, tournament: Tournament):
+    def __init__(self, tournament: Tournament, locked_teams: list = None):
         self.tournament = tournament
-        self.strategy = Strategy.from_random(tournament)
+        self.strategy = Strategy.from_random(tournament, locked_teams=locked_teams)
         self.score = self.strategy.score()
 
     @staticmethod
