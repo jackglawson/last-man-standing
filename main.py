@@ -299,9 +299,11 @@ class SimulatedAnnealing:
         epoch += 1
 
     def run(self, n_epochs: int, callback: Callable):
-        for epoch in tqdm(range(n_epochs)):
-            self.iterate(epoch)
-            callback(self, epoch)
+        with tqdm(range(n_epochs)) as pbar:
+            for epoch in pbar:
+                self.iterate(epoch)
+                pbar.set_postfix(score=self.score)
+                callback(self, epoch)
 
 
 if __name__ == "__main__":
