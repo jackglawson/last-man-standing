@@ -80,7 +80,7 @@ def generate_report():
 <title>Last Man Standing — weekly picks</title>
 <style>
   body {{ font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }}
-  table.report-table {{ border-collapse: collapse; width: 100%; }}
+  table.report-table {{ border-collapse: collapse; width: 100%; font-size: 0.75rem; }}
   table.report-table th, table.report-table td {{ padding: 0.4rem 0.6rem; border-bottom: 1px solid #ddd; text-align: left; }}
   table.report-table th {{ background: #f5f5f5; }}
   img {{ max-width: 100%; }}
