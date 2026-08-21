@@ -8,9 +8,8 @@ Do not edit .ipynb files unless I explicitly ask it
 
 ## Git workflow
 - When working via agents, always work in a git worktree — don't edit the main checkout directly.
-- Do not merge into master automatically. Wait for explicit approval — I'll say "merge into master" or "merge this in" or just "merge"
-- You cannot merge from inside a worktree session (harness blocks writes to the main checkout). Tell me the worktree path is ready for review, and either exit so I can merge, or wait for a session started in the main checkout.
-- On approval: merge the worktree branch into master, then remove the worktree (`git worktree remove <path>`) and delete the branch (`git branch -d <branch>`).
+- Do not merge into master automatically. I will merge it manually
+- Once I have said "merged", remove the worktree (`git worktree remove <path>`) and delete the branch (`git branch -d <branch>`).
 
 ## What this is
 

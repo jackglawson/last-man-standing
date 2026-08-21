@@ -30,7 +30,7 @@ def generate_report():
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Last Man Standing — weekly picks</title>
+<title>LMS solver - cde</title>
 <style>
   body {{ font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }}
   table.strategy-table {{ border-collapse: collapse; width: 100%; }}
@@ -41,8 +41,7 @@ def generate_report():
 </style>
 </head>
 <body>
-<h1>Last Man Standing — weekly picks</h1>
-<p>Solver convergence:</p>
+<h1>Last Man Standing — abc</h1>
 <img src="scores.png" alt="Simulated annealing score over epochs">
 <h2>Full strategy</h2>
 {table_html}
