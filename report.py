@@ -22,7 +22,7 @@ def generate_report():
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     fig, (ax_score, ax_min_improvement) = plt.subplots(
-        2, 1, sharex=True, figsize=(6, 6)
+        2, 1, sharex=True, figsize=(4.5, 4.5)
     )
     ax_score.plot(scores)
     ax_score.set_ylabel("Score")
