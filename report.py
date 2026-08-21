@@ -77,7 +77,7 @@ def generate_report():
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Last Man Standing — weekly picks</title>
+<title>LMS solver</title>
 <style>
   body {{ font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }}
   table.report-table {{ border-collapse: collapse; width: 100%; font-size: 0.75rem; }}
@@ -89,7 +89,7 @@ def generate_report():
 </style>
 </head>
 <body>
-<h1>Last Man Standing — weekly picks</h1>
+<h1>LMS solver</h1>
 {next_pick_html}
 <p>Solver convergence:</p>
 <img src="scores.png" alt="Simulated annealing score and min improvement per epoch">
@@ -108,6 +108,7 @@ def generate_report():
 </html>
 """
     (OUTPUT_DIR / "index.html").write_text(html)
+    print("Saving to ", OUTPUT_DIR / "index.html")
 
 
 if __name__ == "__main__":
