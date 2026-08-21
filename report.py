@@ -44,7 +44,7 @@ def generate_report():
 <h1>Last Man Standing — weekly picks</h1>
 <p>Solver convergence:</p>
 <img src="scores.png" alt="Simulated annealing score over epochs">
-<h2>Recommended strategy</h2>
+<h2>Full strategy</h2>
 {table_html}
 <footer>Last updated {generated_at}</footer>
 </body>
