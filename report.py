@@ -27,7 +27,7 @@ def generate_report():
         )
         ax_score.plot(scores)
         ax_score.set_ylabel("Score")
-        ax_score.set_title("Simulated annealing convergence")
+        ax_score.set_title(f"Simulated annealing convergence. Final score={scores[-1]:.2f}")
         ax_min_improvement.plot(min_improvements)
         ax_min_improvement.set_xlabel("Epoch")
         ax_min_improvement.set_ylabel("Min improvement")
