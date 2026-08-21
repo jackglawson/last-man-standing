@@ -21,17 +21,18 @@ def generate_report():
     strategy, scores, min_improvements, duration_seconds = main()
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    fig, (ax_score, ax_min_improvement) = plt.subplots(
-        2, 1, sharex=True, figsize=(4.5, 4.5)
-    )
-    ax_score.plot(scores)
-    ax_score.set_ylabel("Score")
-    ax_score.set_title("Simulated annealing convergence")
-    ax_min_improvement.plot(min_improvements)
-    ax_min_improvement.set_xlabel("Epoch")
-    ax_min_improvement.set_ylabel("Min improvement")
-    fig.tight_layout()
-    fig.savefig(OUTPUT_DIR / "scores.png", dpi=150, bbox_inches="tight")
+    with plt.rc_context({"font.size": 7}):  # 30% smaller than matplotlib's default 10pt
+        fig, (ax_score, ax_min_improvement) = plt.subplots(
+            2, 1, sharex=True, figsize=(4.5, 4.5)
+        )
+        ax_score.plot(scores)
+        ax_score.set_ylabel("Score")
+        ax_score.set_title("Simulated annealing convergence")
+        ax_min_improvement.plot(min_improvements)
+        ax_min_improvement.set_xlabel("Epoch")
+        ax_min_improvement.set_ylabel("Min improvement")
+        fig.tight_layout()
+        fig.savefig(OUTPUT_DIR / "scores.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
     df = strategy.get_strategy_df()
@@ -83,7 +84,7 @@ def generate_report():
   table.report-table {{ border-collapse: collapse; width: 100%; font-size: 0.75rem; }}
   table.report-table th, table.report-table td {{ padding: 0.4rem 0.6rem; border-bottom: 1px solid #ddd; text-align: left; }}
   table.report-table th {{ background: #f5f5f5; }}
-  img {{ max-width: 100%; }}
+  img {{ max-width: 100%; display: block; margin: 1rem auto; }}
   .next-pick {{ font-size: 1.2rem; font-weight: 600; background: #eef6ff; border: 1px solid #cfe3fb; padding: 0.75rem 1rem; border-radius: 6px; }}
   footer {{ color: #777; font-size: 0.85rem; margin-top: 2rem; }}
 </style>
