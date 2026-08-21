@@ -31,3 +31,5 @@ ELO_TEAM_MAPPING = {
     "Wolves": "Wolverhampton Wanderers",
     "Wrexham": "Wrexham AFC",
 }
+
+N_EPOCHS = 10000
