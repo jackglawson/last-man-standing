@@ -65,6 +65,10 @@ def get_team_counts_df(matches: list, strategy_df: pd.DataFrame) -> pd.DataFrame
     teams = pd.merge(teams, team_picked_count, on="team", validate="1:1", how="outer")
     teams["picked_count"] = teams["picked_count"].fillna(0).astype(int)
 
+    team_picked_on = strategy_df.set_index("team")["match_day"].rename("team_picked_on")
+    teams = pd.merge(teams, team_picked_on, on="team", validate="1:1", how="outer")
+    teams["team_picked_on"] = teams["team_picked_on"].fillna(-1).astype(int)
+
     opponent_team_picked_count = strategy_df["opponent_team"].value_counts().rename(
         "opponent_picked_count"
     )
