@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 
 from data import get_matches
 from main import main
+from settings import SCORE_DECAY_GAMMA
 from visualisation import (
     get_matches_df,
     get_team_counts_df,
@@ -37,6 +38,21 @@ def generate_report():
             ax_min_improvement.set_ylabel("Min improvement")
             fig.tight_layout()
             fig.savefig(OUTPUT_DIR / "scores.png", dpi=150, bbox_inches="tight")
+        plt.close(fig)
+
+        num_locked = len(strategy.locked_teams)
+        match_days = strategy.tournament.match_weeks
+        decay_weights = [
+            SCORE_DECAY_GAMMA ** max(i - num_locked, 0) for i in range(len(match_days))
+        ]
+        with plt.rc_context({"font.size": 6}):
+            fig, ax_decay = plt.subplots(figsize=(4.5, 2.25))
+            ax_decay.plot(match_days, decay_weights)
+            ax_decay.set_xlabel("Match day")
+            ax_decay.set_ylabel("Score weight")
+            ax_decay.set_title(f"Score decay per match day (γ={SCORE_DECAY_GAMMA})")
+            fig.tight_layout()
+            fig.savefig(OUTPUT_DIR / "decay.png", dpi=150, bbox_inches="tight")
         plt.close(fig)
 
         df = strategy.get_strategy_df()
@@ -118,6 +134,7 @@ def generate_report():
 {next_pick_html}
 <p>Solver convergence:</p>
 <img src="scores.png" alt="Simulated annealing score and min improvement per epoch">
+<img src="decay.png" alt="Score weight decay per match day">
 <p>Simulated annealing ran in {duration_seconds:.2f}s over {len(scores)} epochs.</p>
 <h2>Recommended strategy</h2>
 <p>Grey rows are already-played matches or locked-in picks — fixed and no longer part of the search.</p>
