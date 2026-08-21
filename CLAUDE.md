@@ -24,11 +24,11 @@ No build step, package manifest, test suite, or linter is configured — this is
 venv/bin/python3 main.py
 ```
 
-Most exploratory/interactive work happens in the notebooks (`blackboard.ipynb`, `Evaluate elo model.ipynb`, `dates.ipynb`) rather than in `main.py`'s `__main__` block, which currently only holds toy example data.
+Most exploratory/interactive work happens in the notebooks (`blackboard.ipynb`, `evaluate_elo_model.ipynb`, `dates.ipynb`). `main.py`'s `__main__` block runs the real solver end-to-end but doesn't print or save anything; `report.py` is the CI-facing entry point — it calls `main.main()` and writes a plot + strategy table to `public/` (see "CI / automation" below).
 
 ## Architecture
 
-**`settings.py`** — config constants pulled out of `data.py`: `SEASON_YEAR`, `SEASON_START_DATE`, and `ELO_TEAM_MAPPING` (the clubelo → football-data team-name mapping used by `get_elos`). Update these here each season rather than editing `data.py`.
+**`settings.py`** — config constants pulled out of `data.py`: `SEASON_YEAR`, `SEASON_START_DATE`, and `ELO_TEAM_MAPPING` (the clubelo → football-data team-name mapping used by `get_elos`). Update these here each season rather than editing `data.py` — the CI workflow does not touch these values, so a new season still needs a manual bump.
 
 **`data.py`** — all external I/O, three data sources:
 - `get_matches()` — fixtures/results from football-data.org (`get_matches_for_league`, called for `PL` and `ELC`), enriched with `week_number`, `day_of_week`, `is_midweek`, then run through `add_inferred_match_day` and `add_is_valid_match`.
@@ -41,15 +41,23 @@ Most exploratory/interactive work happens in the notebooks (`blackboard.ipynb`, 
 
   The match-day model: football-data.org's own `matchday` numbering is authoritative for PL but not aligned with ELC's, so `add_inferred_match_day` derives a shared `match_day` from `(week_number, is_midweek)`, keyed off PL. `add_is_valid_match` then encodes the pool's actual pick-eligibility rules from `README.md`: PL matches are always valid; midweek ELC matches are never valid (can't be picked); a match's validity also depends on whether its week resolved to a real match_day at all.
 
-**`model.py`** — pure math, no I/O. Converts a pair of Elo ratings into home/away/draw probabilities (`elos_to_modelled_probabilities`), applying a fixed home-advantage adjustment before normalizing. Only used as a fallback in `Tournament.from_apis` when neither a completed result nor bookmaker odds are available for a match.
+**`elo_model.py`** — pure math, no I/O. Converts a pair of Elo ratings into home/away/draw probabilities (`elos_to_modelled_probabilities`), applying a fixed home-advantage adjustment before normalizing. Only used as a fallback in `Tournament.from_apis` when neither a completed result nor bookmaker odds are available for a match.
 
-**`main.py`** — the solver:
+**`strategy.py`** — the solver:
 - `Match` / `Tournament` — `Tournament.from_apis()` is the real entry point: it pulls matches/odds/elos from `data.py`, and for each match picks a probability source in priority order — actual result if the match is finished, else Betfair odds if available, else the Elo model — recording which source was used (`probability_source`) on the `Match`.
-- `Strategy` — a candidate season-long assignment of `week -> team`. `Strategy.from_random` seeds a valid strategy by filling *scarcer* weeks (fewest eligible teams — typically ELC-sit-out midweeks) first, so flexible weeks don't exhaust the teams a scarce week needs. `make_swap`/`_can_swap`/`change_to_random_neighbour` mutate a strategy while preserving validity (each team eligible for its assigned week, no team reused); `score()` rewards low loss/draw probability across the season.
+- `Strategy` — a candidate season-long assignment of `week -> team`. `Strategy.from_random` seeds a valid strategy by filling *scarcer* weeks (fewest eligible teams — typically ELC-sit-out midweeks) first, so flexible weeks don't exhaust the teams a scarce week needs. `make_swap`/`_can_swap`/`change_to_random_neighbour` mutate a strategy while preserving validity (each team eligible for its assigned week, no team reused); `score()` rewards low loss/draw probability across the season; `get_strategy_df()` renders the final per-week picks as a DataFrame.
 - `SimulatedAnnealing` — hill-climbs over `Strategy` neighbours, accepting worse moves early on and tightening (`get_min_improvement`, currently a hard floor of 0 after enough epochs) as `epoch` grows.
+
+**`main.py`** — thin driver: `main()` builds a `Tournament.from_apis()`, runs 100 epochs of `SimulatedAnnealing`, and returns `(strategy, scores)`.
+
+**`report.py`** — CI-facing entry point. Calls `main.main()`, saves a `scores` convergence plot and the `get_strategy_df()` table into `public/index.html` + `public/scores.png`. This is what `.github/workflows/report.yml` runs.
+
+## CI / automation
+
+`.github/workflows/report.yml` runs `report.py` every Friday 08:00 UTC (and on manual `workflow_dispatch`), then publishes `public/` to GitHub Pages via `actions/upload-pages-artifact` + `actions/deploy-pages`. Requires two repo secrets, `ODDS_API_KEY` and `FOOTBALL_DATA_TOKEN` (see below), and Pages source set to "GitHub Actions" in repo settings (one-time, done outside this repo).
 
 ## Notes specific to this domain
 
 The pick-eligibility rules (`README.md`) are load-bearing and non-obvious from the data alone: PL midweek matches are pickable, ELC midweek matches never are, and if there's no PL match in a given week, that week isn't picked at all. Any change to `add_inferred_match_day` / `add_is_valid_match` should be checked against these rules, not just against making the code run.
 
-`data.py` contains hardcoded API keys (the-odds-api.com, football-data.org) — treat them as this project's existing credentials, not something to rotate or remove incidentally.
+`data.py` reads two API credentials from environment variables — `ODDS_API_KEY` (the-odds-api.com) and `FOOTBALL_DATA_TOKEN` (football-data.org) — via `os.environ`. Locally, populate a gitignored `.env` file (see `.env.example`); `data.py` loads it via `python-dotenv`'s `load_dotenv()`. In CI, the same names come from GitHub Secrets. These are the project's existing credentials, just relocated out of source — not rotated as part of this change.

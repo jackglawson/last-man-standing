@@ -13,7 +13,7 @@ def main():
 
     s.run(100, callback)
 
-    return s.strategy
+    return s.strategy, scores
 
 
 if __name__ == '__main__':

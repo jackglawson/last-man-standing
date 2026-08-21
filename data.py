@@ -1,5 +1,6 @@
 import hashlib
 import json
+import os
 import re
 import time
 from functools import lru_cache
@@ -12,8 +13,11 @@ import requests
 import pandas as pd
 import datetime as dt
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
 
 from settings import ELO_TEAM_MAPPING, SEASON_START_DATE, SEASON_YEAR
+
+load_dotenv()  # no-op if no .env file present (e.g. in CI)
 
 CACHE_ROOT = Path(__file__).resolve().parent / ".cache"
 
@@ -152,7 +156,7 @@ def get_upcoming_match_odds_for_league(league: str):
     url = f"https://api.the-odds-api.com/v4/sports/{league}/odds/"
 
     params = {
-        "api_key": "0244eb5a445b8b4c29d764577f5fffa5",
+        "api_key": os.environ["ODDS_API_KEY"],
         "regions": "uk",
         "markets": "h2h",
         "oddsFormat": "decimal",
@@ -253,7 +257,7 @@ def get_matches_for_league(league):
 
     url = f"https://api.football-data.org/v4/competitions/{league}/matches"
 
-    headers = {"X-Auth-Token": "9ef31fc38c374b5b9143fdcbf7ff01c3"}
+    headers = {"X-Auth-Token": os.environ["FOOTBALL_DATA_TOKEN"]}
 
     params = {
         "season": SEASON_YEAR,
