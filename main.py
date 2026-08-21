@@ -311,7 +311,7 @@ class SimulatedAnnealing:
 
     @staticmethod
     def get_min_improvement(epoch):
-        return min(0, epoch * 0.001 - 2)
+        return min(0, epoch * 0.0002 - 0.5)
 
     def iterate(self, epoch):
         neighbour = deepcopy(self.strategy)
@@ -326,7 +326,7 @@ class SimulatedAnnealing:
         with tqdm(range(n_epochs)) as pbar:
             for epoch in pbar:
                 self.iterate(epoch)
-                pbar.set_postfix(score=self.score)
+                pbar.set_postfix(score=self.score, min_improvement=self.get_min_improvement(epoch))
                 callback(self, epoch)
 
 
