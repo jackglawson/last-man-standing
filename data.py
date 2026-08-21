@@ -3,6 +3,7 @@ import json
 import os
 import re
 import time
+import warnings
 from functools import lru_cache
 from io import StringIO
 from pathlib import Path
@@ -170,7 +171,7 @@ def get_upcoming_match_odds_for_league(league: str):
     odds_data = []
     for raw_odds_datum in raw_odds_data:
         if not raw_odds_datum["bookmakers"]:
-            print(
+            warnings.warn(
                 f"No odds available for {raw_odds_datum['home_team']} vs {raw_odds_datum['away_team']} on {raw_odds_datum['commence_time']}"
             )
             continue
@@ -368,7 +369,7 @@ def get_teams_df(matches: list) -> pd.DataFrame:
     def get_elo_for_team(team: str):
         if team in elos:
             return elos[team]
-        print(f"WARNING: Could not find elo for {team}. Using average elo instead")
+        warnings.warn(f"Could not find elo for {team}. Using average elo instead")
         return np.mean(list(elos.values()))
 
     return pd.DataFrame(

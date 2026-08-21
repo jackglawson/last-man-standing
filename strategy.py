@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import random
+import warnings
 from copy import deepcopy
 from typing import Callable
 
@@ -90,7 +91,7 @@ class Tournament:
             if team in elos:
                 return elos[team]
             else:
-                print(f"WARNING: Could not find elo for {team}. Using average elo instead")
+                warnings.warn(f"Could not find elo for {team}. Using average elo instead")
                 return np.mean(list(elos.values()))
 
 

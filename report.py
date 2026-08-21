@@ -1,4 +1,5 @@
 import datetime as dt
+import warnings
 from pathlib import Path
 
 import matplotlib
@@ -18,64 +19,79 @@ OUTPUT_DIR = Path(__file__).resolve().parent / "public"
 
 
 def generate_report():
-    strategy, scores, min_improvements, duration_seconds = main()
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    with warnings.catch_warnings(record=True) as caught_warnings:
+        warnings.simplefilter("always")
 
-    with plt.rc_context({"font.size": 6}):
-        fig, (ax_score, ax_min_improvement) = plt.subplots(
-            2, 1, sharex=True, figsize=(4.5, 4.5)
+        strategy, scores, min_improvements, duration_seconds = main()
+        OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+        with plt.rc_context({"font.size": 6}):
+            fig, (ax_score, ax_min_improvement) = plt.subplots(
+                2, 1, sharex=True, figsize=(4.5, 4.5)
+            )
+            ax_score.plot(scores)
+            ax_score.set_ylabel("Score")
+            ax_score.set_title(f"Simulated annealing convergence. Final score={scores[-1]:.2f}")
+            ax_min_improvement.plot(min_improvements)
+            ax_min_improvement.set_xlabel("Epoch")
+            ax_min_improvement.set_ylabel("Min improvement")
+            fig.tight_layout()
+            fig.savefig(OUTPUT_DIR / "scores.png", dpi=150, bbox_inches="tight")
+        plt.close(fig)
+
+        df = strategy.get_strategy_df()
+        # A "match completed" row means the result is already known, and a
+        # locked-team row means the pick was already committed (via
+        # LOCKED_TEAMS) — either way that week's pick is fixed and no longer
+        # part of the search.
+        is_fixed = (df["probability_source"] == "match completed") | df["team"].isin(
+            strategy.locked_teams
         )
-        ax_score.plot(scores)
-        ax_score.set_ylabel("Score")
-        ax_score.set_title(f"Simulated annealing convergence. Final score={scores[-1]:.2f}")
-        ax_min_improvement.plot(min_improvements)
-        ax_min_improvement.set_xlabel("Epoch")
-        ax_min_improvement.set_ylabel("Min improvement")
-        fig.tight_layout()
-        fig.savefig(OUTPUT_DIR / "scores.png", dpi=150, bbox_inches="tight")
-    plt.close(fig)
 
-    df = strategy.get_strategy_df()
-    # A "match completed" row means the result is already known, and a
-    # locked-team row means the pick was already committed (via
-    # LOCKED_TEAMS) — either way that week's pick is fixed and no longer
-    # part of the search.
-    is_fixed = (df["probability_source"] == "match completed") | df["team"].isin(
-        strategy.locked_teams
-    )
+        def highlight_fixed(row):
+            style = "background-color: #e0e0e0;" if is_fixed.loc[row.name] else ""
+            return [style] * len(row)
 
-    def highlight_fixed(row):
-        style = "background-color: #e0e0e0;" if is_fixed.loc[row.name] else ""
-        return [style] * len(row)
+        strategy_table_html = (
+            df.style.hide(axis="index")
+            .apply(highlight_fixed, axis=1)
+            .to_html(table_attributes='class="report-table"')
+        )
 
-    strategy_table_html = (
-        df.style.hide(axis="index")
-        .apply(highlight_fixed, axis=1)
-        .to_html(table_attributes='class="report-table"')
-    )
+        upcoming = df[~is_fixed]
+        if not upcoming.empty:
+            next_pick = upcoming.iloc[0]
+            next_pick_html = (
+                f'<p class="next-pick">Pick for match day {next_pick["match_day"]}: '
+                f'{next_pick["team"]} ({next_pick["date"]})</p>'
+            )
+        else:
+            next_pick_html = '<p class="next-pick">No upcoming picks.</p>'
 
-    upcoming = df[~is_fixed]
-    if not upcoming.empty:
-        next_pick = upcoming.iloc[0]
-        next_pick_html = (
-            f'<p class="next-pick">Pick for match day {next_pick["match_day"]}: '
-            f'{next_pick["team"]} ({next_pick["date"]})</p>'
+        matches = get_matches()
+        matches_df = get_matches_df(matches)
+
+        schedule_html = match_day_schedule_figure(matches_df).to_html(
+            full_html=False, include_plotlyjs="cdn"
+        )
+        match_count_html = match_count_per_match_day_figure(matches_df).to_html(
+            full_html=False, include_plotlyjs=False
+        )
+        teams_table_html = get_team_counts_df(matches, df).to_html(
+            index=False, classes="report-table", border=0
+        )
+
+    if caught_warnings:
+        warning_items = "".join(
+            f"<li>{w.message}</li>" for w in caught_warnings
+        )
+        warnings_html = (
+            '<div class="warnings-banner"><strong>'
+            f"{len(caught_warnings)} warning(s) during report generation:</strong>"
+            f"<ul>{warning_items}</ul></div>"
         )
     else:
-        next_pick_html = '<p class="next-pick">No upcoming picks.</p>'
-
-    matches = get_matches()
-    matches_df = get_matches_df(matches)
-
-    schedule_html = match_day_schedule_figure(matches_df).to_html(
-        full_html=False, include_plotlyjs="cdn"
-    )
-    match_count_html = match_count_per_match_day_figure(matches_df).to_html(
-        full_html=False, include_plotlyjs=False
-    )
-    teams_table_html = get_team_counts_df(matches, df).to_html(
-        index=False, classes="report-table", border=0
-    )
+        warnings_html = ""
 
     generated_at = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     html = f"""<!DOCTYPE html>
@@ -91,11 +107,14 @@ def generate_report():
   table.report-table th {{ background: #f5f5f5; }}
   img {{ max-width: 100%; display: block; margin: 1rem auto; }}
   .next-pick {{ font-size: 1.2rem; font-weight: 600; background: #eef6ff; border: 1px solid #cfe3fb; padding: 0.75rem 1rem; border-radius: 6px; }}
+  .warnings-banner {{ background: #fff8e1; border: 1px solid #f0d878; padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; }}
+  .warnings-banner ul {{ margin: 0.5rem 0 0; padding-left: 1.25rem; }}
   footer {{ color: #777; font-size: 0.85rem; margin-top: 2rem; }}
 </style>
 </head>
 <body>
 <h1>LMS solver</h1>
+{warnings_html}
 {next_pick_html}
 <p>Solver convergence:</p>
 <img src="scores.png" alt="Simulated annealing score and min improvement per epoch">
