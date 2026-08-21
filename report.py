@@ -81,8 +81,9 @@ def generate_report():
 <title>Last Man Standing — weekly picks</title>
 <style>
   body {{ font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }}
+  .table-scroll {{ overflow-x: auto; }}
   table.report-table {{ border-collapse: collapse; width: 100%; font-size: 0.75rem; }}
-  table.report-table th, table.report-table td {{ padding: 0.4rem 0.6rem; border-bottom: 1px solid #ddd; text-align: left; }}
+  table.report-table th, table.report-table td {{ padding: 0.4rem 0.6rem; border-bottom: 1px solid #ddd; text-align: left; white-space: nowrap; }}
   table.report-table th {{ background: #f5f5f5; }}
   img {{ max-width: 100%; display: block; margin: 1rem auto; }}
   .next-pick {{ font-size: 1.2rem; font-weight: 600; background: #eef6ff; border: 1px solid #cfe3fb; padding: 0.75rem 1rem; border-radius: 6px; }}
@@ -97,13 +98,13 @@ def generate_report():
 <p>Simulated annealing ran in {duration_seconds:.2f}s over {len(scores)} epochs.</p>
 <h2>Recommended strategy</h2>
 <p>Grey rows are already-played matches — fixed and no longer part of the search.</p>
-{strategy_table_html}
+<div class="table-scroll">{strategy_table_html}</div>
 <h2>Schedule overview</h2>
 {schedule_html}
 <h2>Matches per match day</h2>
 {match_count_html}
 <h2>Teams</h2>
-{teams_table_html}
+<div class="table-scroll">{teams_table_html}</div>
 <footer>Last updated {generated_at}</footer>
 </body>
 </html>
