@@ -10,7 +10,7 @@ from tqdm.auto import tqdm
 
 from data import get_matches, get_upcoming_match_odds, get_elos, int_to_date
 from elo_model import elos_to_modelled_probabilities
-from settings import MIN_IMPROVEMENT_SCHEDULE
+from settings import MIN_IMPROVEMENT_SCHEDULE, SCORE_DECAY_GAMMA
 
 
 @dataclass
@@ -268,9 +268,12 @@ class Strategy:
 
     def score(self):
         score = 10
-        for date in self.tournament.match_weeks:
+        num_locked = len(self.locked_teams)
+        for i, date in enumerate(self.tournament.match_weeks):
             team = self.week_to_team[date]
-            score -= (
+            t = max(i - num_locked, 0)
+            weight = SCORE_DECAY_GAMMA ** t
+            score -= weight * (
                 self.tournament.p_lose_mapping[date][team] * 2
                 + self.tournament.p_draw_mapping[date][team]
             )

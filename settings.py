@@ -39,3 +39,10 @@ ELO_TEAM_MAPPING = {
 N_EPOCHS = 10000
 
 MIN_IMPROVEMENT_SCHEDULE = {500: -0.5, 2000: -0.1, 4000: -0.05, 6000: -0.02, 10000: 0}
+
+# Per-week decay applied to score() so weeks further in the future count for
+# less: the pool may already be decided by then, and the probability
+# estimates for far-out matches (Elo fallback rather than market odds) are
+# less trustworthy anyway. weight(t) = SCORE_DECAY_GAMMA ** t, t = rank among
+# not-yet-locked weeks.
+SCORE_DECAY_GAMMA = 0.95
