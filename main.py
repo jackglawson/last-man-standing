@@ -1,10 +1,13 @@
+import random
 import time
 
-from settings import N_EPOCHS, LOCKED_TEAMS
+from settings import N_EPOCHS, LOCKED_TEAMS, RANDOM_SEED
 from strategy import Tournament, SimulatedAnnealing
 
 
 def main():
+    random.seed(RANDOM_SEED)
+
     tournament = Tournament.from_apis()
 
     scores = []
