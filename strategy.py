@@ -9,6 +9,7 @@ from tqdm.auto import tqdm
 
 from data import get_matches, get_upcoming_match_odds, get_elos, int_to_date
 from elo_model import elos_to_modelled_probabilities
+from settings import MIN_IMPROVEMENT_SCHEDULE
 
 
 @dataclass
@@ -311,7 +312,8 @@ class SimulatedAnnealing:
 
     @staticmethod
     def get_min_improvement(epoch):
-        return min(0, epoch * 0.0002 - 0.5)
+        key = min(k for k in MIN_IMPROVEMENT_SCHEDULE if k > epoch)
+        return MIN_IMPROVEMENT_SCHEDULE[key]
 
     def iterate(self, epoch):
         neighbour = deepcopy(self.strategy)

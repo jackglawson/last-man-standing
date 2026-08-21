@@ -21,9 +21,9 @@ def generate_report():
     strategy, scores, min_improvements, duration_seconds = main()
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    with plt.rc_context({"font.size": 5}):
+    with plt.rc_context({"font.size": 6}):
         fig, (ax_score, ax_min_improvement) = plt.subplots(
-            2, 1, sharex=True, figsize=(3.5, 3.5)
+            2, 1, sharex=True, figsize=(4.5, 4.5)
         )
         ax_score.plot(scores)
         ax_score.set_ylabel("Score")
