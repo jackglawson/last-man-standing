@@ -48,9 +48,11 @@ Most exploratory/interactive work happens in the notebooks (`blackboard.ipynb`, 
 - `Strategy` — a candidate season-long assignment of `week -> team`. `Strategy.from_random` seeds a valid strategy by filling *scarcer* weeks (fewest eligible teams — typically ELC-sit-out midweeks) first, so flexible weeks don't exhaust the teams a scarce week needs. `make_swap`/`_can_swap`/`change_to_random_neighbour` mutate a strategy while preserving validity (each team eligible for its assigned week, no team reused); `score()` rewards low loss/draw probability across the season; `get_strategy_df()` renders the final per-week picks as a DataFrame.
 - `SimulatedAnnealing` — hill-climbs over `Strategy` neighbours, accepting worse moves early on and tightening (`get_min_improvement`, currently a hard floor of 0 after enough epochs) as `epoch` grows.
 
-**`main.py`** — thin driver: `main()` builds a `Tournament.from_apis()`, runs 100 epochs of `SimulatedAnnealing`, and returns `(strategy, scores)`.
+**`main.py`** — thin driver: `main()` builds a `Tournament.from_apis()`, runs 100 epochs of `SimulatedAnnealing`, and returns `(strategy, scores, min_improvements, duration_seconds)`.
 
-**`report.py`** — CI-facing entry point. Calls `main.main()`, saves a `scores` convergence plot and the `get_strategy_df()` table into `public/index.html` + `public/scores.png`. This is what `.github/workflows/report.yml` runs.
+**`visualisation.py`** — chart/table builders consumed only by `report.py`: `get_matches_df`, `match_day_schedule_figure` and `match_count_per_match_day_figure` (both Plotly, built from `data.get_matches()`), and `get_team_counts_df` (per-team Elo + how often each team was picked/faced as an opponent in the current strategy, via `data.get_teams_df`).
+
+**`report.py`** — CI-facing entry point. Calls `main.main()` and `visualisation.py`'s builders, then writes `public/index.html` + `public/scores.png`: a convergence + min-improvement plot (shared x-axis), a "Pick for match day N" headline for the next not-yet-played week, the full strategy table (rows for already-played matches — `probability_source == "match completed"` — greyed out as fixed), a schedule overview, matches-per-match-day, and the team counts table. This is what `.github/workflows/report.yml` runs.
 
 ## CI / automation
 
