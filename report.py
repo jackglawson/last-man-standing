@@ -36,9 +36,13 @@ def generate_report():
     plt.close(fig)
 
     df = strategy.get_strategy_df()
-    # A "match completed" row means the result is already known, i.e. that
-    # week's pick is history and can no longer change.
-    is_fixed = df["probability_source"] == "match completed"
+    # A "match completed" row means the result is already known, and a
+    # locked-team row means the pick was already committed (via
+    # LOCKED_TEAMS) — either way that week's pick is fixed and no longer
+    # part of the search.
+    is_fixed = (df["probability_source"] == "match completed") | df["team"].isin(
+        strategy.locked_teams
+    )
 
     def highlight_fixed(row):
         style = "background-color: #e0e0e0;" if is_fixed.loc[row.name] else ""
@@ -97,7 +101,7 @@ def generate_report():
 <img src="scores.png" alt="Simulated annealing score and min improvement per epoch">
 <p>Simulated annealing ran in {duration_seconds:.2f}s over {len(scores)} epochs.</p>
 <h2>Recommended strategy</h2>
-<p>Grey rows are already-played matches — fixed and no longer part of the search.</p>
+<p>Grey rows are already-played matches or locked-in picks — fixed and no longer part of the search.</p>
 <div class="table-scroll">{strategy_table_html}</div>
 <h2>Schedule overview</h2>
 {schedule_html}
