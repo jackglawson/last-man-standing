@@ -1,3 +1,5 @@
+LOCKED_TEAMS = []
+
 SEASON_YEAR = "2026"
 
 SEASON_START_DATE = 20260821  # Must be a Friday

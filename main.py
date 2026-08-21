@@ -1,6 +1,6 @@
 import time
 
-from settings import N_EPOCHS
+from settings import N_EPOCHS, LOCKED_TEAMS
 from strategy import Tournament, SimulatedAnnealing
 
 
@@ -15,7 +15,7 @@ def main():
         scores.append(simulated_annealing.score)
         min_improvements.append(simulated_annealing.get_min_improvement(epoch))
 
-    s = SimulatedAnnealing(tournament, locked_teams=[])
+    s = SimulatedAnnealing(tournament, locked_teams=LOCKED_TEAMS)
 
     start = time.perf_counter()
     s.run(N_EPOCHS, callback)
