@@ -40,7 +40,7 @@ ELO_TEAM_MAPPING = {
 # reflect a transfer or injury not yet priced in. Keys must match a team name
 # as returned by get_elos() (i.e. the football-data.org name, post-
 # ELO_TEAM_MAPPING) — get_elos() validates this and raises on typos.
-ELO_ADJUSTMENT = {}
+ELO_ADJUSTMENT = {"Hull City AFC": 100}
 
 N_EPOCHS = 10000
 
