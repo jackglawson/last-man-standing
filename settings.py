@@ -36,6 +36,12 @@ ELO_TEAM_MAPPING = {
     "Wrexham": "Wrexham AFC",
 }
 
+# Manual overrides applied on top of the scraped clubelo ratings, e.g. to
+# reflect a transfer or injury not yet priced in. Keys must match a team name
+# as returned by get_elos() (i.e. the football-data.org name, post-
+# ELO_TEAM_MAPPING) — get_elos() validates this and raises on typos.
+ELO_ADJUSTMENT = {}
+
 N_EPOCHS = 10000
 
 MIN_IMPROVEMENT_SCHEDULE = {500: -0.5, 2000: -0.1, 4000: -0.05, 6000: -0.02, 10000: 0}

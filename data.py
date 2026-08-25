@@ -16,7 +16,7 @@ import datetime as dt
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
-from settings import ELO_TEAM_MAPPING, SEASON_START_DATE, SEASON_YEAR
+from settings import ELO_ADJUSTMENT, ELO_TEAM_MAPPING, SEASON_START_DATE, SEASON_YEAR
 
 load_dotenv()  # no-op if no .env file present (e.g. in CI)
 
@@ -251,7 +251,16 @@ def get_elos():
     def to_team(team: str):
         return ELO_TEAM_MAPPING.get(team, team)
 
-    return {to_team(club): elo for club, elo in elos.items()}
+    elos = {to_team(club): elo for club, elo in elos.items()}
+
+    unknown_teams = sorted(set(ELO_ADJUSTMENT) - set(elos))
+    if unknown_teams:
+        raise ValueError(
+            f"ELO_ADJUSTMENT in settings.py has unrecognised team name(s): "
+            f"{unknown_teams}. Known team names: {sorted(elos)}"
+        )
+
+    return {team: elo + ELO_ADJUSTMENT.get(team, 0) for team, elo in elos.items()}
 
 
 def get_matches_for_league(league):
