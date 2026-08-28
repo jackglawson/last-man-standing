@@ -1,4 +1,7 @@
-LOCKED_TEAMS = ["Queens Park Rangers"]
+LOCKED_TEAMS = [
+    "Queens Park Rangers",
+    "Liverpool",
+]
 
 RANDOM_SEED = 0
 
