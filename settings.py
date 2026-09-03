@@ -1,6 +1,7 @@
 LOCKED_TEAMS = [
     "Queens Park Rangers",
     "Liverpool",
+    'West Ham United',
 ]
 
 RANDOM_SEED = 0
