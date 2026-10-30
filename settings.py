@@ -5,6 +5,7 @@ LOCKED_TEAMS = [
     "Chelsea",
     "Norwich City",
     "Arsenal",
+    "Tottenham Hotspur",
     "Wolverhampton Wanderers",
 ]
 
