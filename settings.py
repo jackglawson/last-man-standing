@@ -8,6 +8,7 @@ LOCKED_TEAMS = [
     "Tottenham Hotspur",
     "Wolverhampton Wanderers",
     "Middlesbrough",
+    "Southampton",
 ]
 
 RANDOM_SEED = 0
